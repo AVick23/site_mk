@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🤖 Создаём говорящего робота на Python</title>
-  <meta name="description" content="Полный урок: учим компьютер разговаривать. Стиль Фейнмана — понятно даже 8-летнему.">
+  <title>🤖 Создаём чат-бота на Python: от примитива до интеллекта</title>
+  <meta name="description" content="Полноценный урок по Python. 12+ страниц концентрированной теории и практики. Проблема → решение → код.">
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,12 +16,7 @@
   
   <style>
     /* ============================================
-       APPLE-STYLE DESIGN SYSTEM
-       Python Robot Lesson
-       ============================================ */
-
-    /* ============================================
-       1. ПЕРЕМЕННЫЕ - ТЕМНАЯ ТЕМА
+       APPLE-STYLE DESIGN SYSTEM (ПОЛНАЯ ВЕРСИЯ)
        ============================================ */
     :root {
       --bg-primary: #000000;
@@ -104,15 +99,15 @@
       --radius-2xl: 24px;
       --radius-full: 9999px;
       
-      --sidebar-width: 280px;
-      --container-max: 900px;
+      --sidebar-width: 300px;
+      --container-max: 1000px;
+      --sidebar-collapsed-width: 0px;
       
       --duration-fast: 0.15s;
       --duration-normal: 0.3s;
       --ease-out: cubic-bezier(0, 0, 0.2, 1);
     }
 
-    /* Светлая тема */
     [data-theme="light"] {
       --bg-primary: #ffffff;
       --bg-secondary: #f5f5f7;
@@ -140,7 +135,6 @@
       --overlay-bg: rgba(0, 0, 0, 0.4);
     }
 
-    /* Сброс */
     *, *::before, *::after {
       margin: 0;
       padding: 0;
@@ -163,13 +157,10 @@
       overflow-x: hidden;
       min-height: 100vh;
       display: flex;
+      position: relative;
     }
 
-    /* ============================================
-       2. БОКОВАЯ НАВИГАЦИЯ (SIDEBAR)
-       ============================================ */
-    
-    /* Overlay для мобильных */
+    /* УНИВЕРСАЛЬНАЯ СКРЫВАЕМАЯ ПАНЕЛЬ (ПК + МОБИЛЬНЫЕ) */
     .sidebar-overlay {
       display: none;
       position: fixed;
@@ -187,7 +178,6 @@
       opacity: 1;
     }
 
-    /* Sidebar */
     .sidebar {
       width: var(--sidebar-width);
       height: 100vh;
@@ -195,16 +185,25 @@
       border-right: 1px solid var(--border-secondary);
       display: flex;
       flex-direction: column;
-      position: sticky;
+      position: fixed;
       top: 0;
-      flex-shrink: 0;
+      left: 0;
       z-index: 999;
       overflow: hidden;
+      transition: transform var(--duration-normal) var(--ease-out);
+      transform: translateX(0);
+    }
+
+    .sidebar.collapsed {
+      transform: translateX(calc(-1 * var(--sidebar-width)));
     }
 
     .sidebar-header {
       padding: var(--space-6);
       border-bottom: 1px solid var(--border-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .sidebar-brand {
@@ -223,6 +222,25 @@
 
     .sidebar-brand .brand-dot {
       color: var(--accent-primary);
+    }
+
+    .sidebar-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: var(--text-xl);
+      cursor: pointer;
+      padding: var(--space-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .sidebar-close:hover {
+      color: var(--text-primary);
+      background: var(--glass-bg-light);
     }
 
     .sidebar-nav {
@@ -307,11 +325,8 @@
       border-color: var(--border-primary);
     }
 
-    /* ============================================
-       3. КНОПКА МЕНЮ (МОБИЛЬНАЯ)
-       ============================================ */
+    /* КНОПКА МЕНЮ (ДЛЯ ВСЕХ УСТРОЙСТВ) */
     .menu-btn {
-      display: none;
       position: fixed;
       top: var(--space-4);
       left: var(--space-4);
@@ -320,10 +335,11 @@
       background: var(--bg-card);
       border: 1px solid var(--border-secondary);
       border-radius: var(--radius-md);
+      display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      z-index: 1000;
+      z-index: 997;
       color: var(--text-primary);
       box-shadow: var(--shadow-2);
       transition: all var(--duration-fast) var(--ease-out);
@@ -334,12 +350,16 @@
       border-color: var(--border-primary);
     }
 
-    /* ============================================
-       4. ОСНОВНОЙ КОНТЕНТ
-       ============================================ */
+    /* ОСНОВНОЙ КОНТЕНТ */
     .main-content {
       flex: 1;
       min-width: 0;
+      margin-left: var(--sidebar-width);
+      transition: margin-left var(--duration-normal) var(--ease-out);
+    }
+
+    .main-content.expanded {
+      margin-left: 0;
     }
 
     .container {
@@ -348,9 +368,7 @@
       padding: 0 var(--space-6);
     }
 
-    /* ============================================
-       5. ТИПОГРАФИКА
-       ============================================ */
+    /* ТИПОГРАФИКА */
     h1, h2, h3, h4, h5, h6 {
       font-weight: var(--font-bold);
       line-height: var(--leading-tight);
@@ -390,11 +408,7 @@
       background-clip: text;
     }
 
-    /* ============================================
-       6. КОМПОНЕНТЫ
-       ============================================ */
-
-    /* Кнопки */
+    /* КОМПОНЕНТЫ */
     .button {
       display: inline-flex;
       align-items: center;
@@ -433,22 +447,6 @@
       background: var(--bg-card);
     }
 
-    /* Карточки */
-    .card {
-      background-color: var(--bg-card);
-      border-radius: var(--radius-2xl);
-      padding: var(--space-6);
-      border: 1px solid var(--border-secondary);
-      transition: all var(--duration-normal) var(--ease-out);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card:hover {
-      border-color: var(--border-primary);
-    }
-
-    /* Бейджи */
     .badge {
       display: inline-flex;
       align-items: center;
@@ -473,7 +471,6 @@
       border: 1px solid var(--border-secondary);
     }
 
-    /* Callout */
     .callout {
       padding: var(--space-5) var(--space-6);
       border-radius: var(--radius-xl);
@@ -507,7 +504,6 @@
       border: 1px solid rgba(48, 209, 88, 0.2);
     }
 
-    /* Quote */
     blockquote {
       padding: var(--space-5) var(--space-6);
       margin: var(--space-6) 0;
@@ -524,7 +520,6 @@
       margin: 0;
     }
 
-    /* Lists */
     ul, ol {
       padding-left: var(--space-6);
       margin-bottom: var(--space-6);
@@ -540,52 +535,7 @@
       color: var(--accent-primary);
     }
 
-    /* Details */
-    details {
-      background: var(--bg-card);
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--border-secondary);
-      margin: var(--space-4) 0;
-      overflow: hidden;
-    }
-
-    summary {
-      padding: var(--space-4) var(--space-5);
-      cursor: pointer;
-      font-weight: var(--font-medium);
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      transition: all var(--duration-fast) var(--ease-out);
-    }
-
-    summary:hover {
-      color: var(--accent-primary);
-    }
-
-    summary::marker {
-      content: '';
-    }
-
-    summary::before {
-      content: '▶';
-      font-size: var(--text-xs);
-      transition: transform var(--duration-fast) var(--ease-out);
-    }
-
-    details[open] summary::before {
-      transform: rotate(90deg);
-    }
-
-    details > div {
-      padding: 0 var(--space-5) var(--space-5);
-      color: var(--text-secondary);
-    }
-
-    /* ============================================
-       7. КОД
-       ============================================ */
+    /* КОД */
     .code-block {
       margin: var(--space-5) 0;
       border-radius: var(--radius-xl);
@@ -637,7 +587,6 @@
       color: var(--text-primary);
     }
 
-    /* Syntax Highlighting */
     .keyword { color: #ff79c6; }
     .string { color: #f1fa8c; }
     .function { color: #8be9fd; }
@@ -645,7 +594,6 @@
     .number { color: #bd93f9; }
     .operator { color: #ff79c6; }
 
-    /* Copy Button */
     .copy-btn {
       background: var(--glass-bg-light);
       border: 1px solid var(--border-secondary);
@@ -669,7 +617,6 @@
       border-color: var(--accent-green);
     }
 
-    /* Inline Code */
     code:not(pre code) {
       background: var(--bg-card);
       padding: var(--space-1) var(--space-2);
@@ -680,9 +627,7 @@
       border: 1px solid var(--border-secondary);
     }
 
-    /* ============================================
-       8. ТАБЛИЦЫ
-       ============================================ */
+    /* ТАБЛИЦЫ */
     .table-wrapper {
       overflow-x: auto;
       margin: var(--space-6) 0;
@@ -719,9 +664,7 @@
       background: rgba(10, 132, 255, 0.05);
     }
 
-    /* ============================================
-       9. СЕКЦИИ
-       ============================================ */
+    /* СЕКЦИИ */
     .section {
       padding: var(--space-16) 0;
       position: relative;
@@ -746,7 +689,6 @@
       margin-bottom: var(--space-4);
     }
 
-    /* Step Number */
     .step-number {
       display: inline-flex;
       align-items: center;
@@ -761,14 +703,12 @@
       margin-bottom: var(--space-4);
     }
 
-    /* Grid */
     .grid-2 {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: var(--space-6);
     }
 
-    /* Diagram */
     .diagram {
       background: var(--bg-card);
       border-radius: var(--radius-xl);
@@ -788,9 +728,7 @@
       padding: 0;
     }
 
-    /* ============================================
-       10. HERO
-       ============================================ */
+    /* HERO */
     .hero {
       padding: var(--space-20) 0 var(--space-16);
       position: relative;
@@ -822,9 +760,7 @@
       gap: var(--space-4);
     }
 
-    /* ============================================
-       11. ФУТЕР
-       ============================================ */
+    /* ФУТЕР */
     .footer {
       background-color: var(--bg-secondary);
       padding: var(--space-12) 0;
@@ -856,52 +792,7 @@
       font-size: var(--text-xs);
     }
 
-    /* ============================================
-       12. АДАПТИВНОСТЬ
-       ============================================ */
-
-    /* Планшеты и мобильные */
-    @media (max-width: 1024px) {
-      :root {
-        --text-7xl: 56px;
-        --text-6xl: 44px;
-        --text-5xl: 36px;
-        --text-4xl: 30px;
-      }
-      
-      body {
-        flex-direction: column;
-      }
-      
-      /* Sidebar для мобильных */
-      .sidebar {
-        position: fixed;
-        left: -300px;
-        top: 0;
-        height: 100vh;
-        width: 300px;
-        transition: left var(--duration-normal) var(--ease-out);
-        z-index: 999;
-      }
-      
-      .sidebar.open {
-        left: 0;
-      }
-      
-      .sidebar-overlay {
-        display: block;
-      }
-      
-      .menu-btn {
-        display: flex;
-      }
-      
-      .grid-2 {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Мобильные */
+    /* АДАПТАЦИЯ */
     @media (max-width: 768px) {
       :root {
         --text-7xl: 40px;
@@ -934,9 +825,12 @@
       .code-block pre {
         font-size: var(--text-xs);
       }
+      
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
     }
 
-    /* Маленькие экраны */
     @media (max-width: 375px) {
       :root {
         --text-6xl: 28px;
@@ -978,7 +872,6 @@
       outline-offset: 2px;
     }
 
-    /* Checklist */
     .checklist {
       list-style: none;
       padding-left: 0;
@@ -1009,7 +902,6 @@
       font-size: var(--text-xs);
     }
 
-    /* Feature Items */
     .feature-item {
       display: flex;
       gap: var(--space-4);
@@ -1047,106 +939,76 @@
   </style>
 </head>
 <body>
-  <!-- Overlay для мобильных -->
+  <!-- Универсальный overlay -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  <!-- Боковая навигация -->
+  <!-- Боковая навигация (скрываемая на всех устройствах) -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <a href="#" class="sidebar-brand">
         <span class="brand-icon">🤖</span>
         Python<span class="brand-dot">.</span>
       </a>
+      <button class="sidebar-close" id="sidebarClose" aria-label="Закрыть меню">✕</button>
     </div>
     
     <nav class="sidebar-nav">
       <div class="nav-section">
         <div class="nav-section-title">Навигация</div>
         <ul class="nav-links">
-          <li>
-            <a href="#intro" class="nav-link active">
-              <span class="nav-link-icon">👋</span>
-              Введение
-            </a>
-          </li>
-          <li>
-            <a href="#prep" class="nav-link">
-              <span class="nav-link-icon">🛠️</span>
-              Подготовка
-            </a>
-          </li>
+          <li><a href="#intro" class="nav-link active"><span class="nav-link-icon">👋</span>Введение</a></li>
+          <li><a href="#prep" class="nav-link"><span class="nav-link-icon">🛠️</span>Подготовка</a></li>
         </ul>
       </div>
       
       <div class="nav-section">
-        <div class="nav-section-title">Шаги</div>
+        <div class="nav-section-title">Основы языка</div>
         <ul class="nav-links">
-          <li>
-            <a href="#step1" class="nav-link">
-              <span class="nav-link-icon">1</span>
-              print() — говорим
-            </a>
-          </li>
-          <li>
-            <a href="#step2" class="nav-link">
-              <span class="nav-link-icon">2</span>
-              input() — слушаем
-            </a>
-          </li>
-          <li>
-            <a href="#step3" class="nav-link">
-              <span class="nav-link-icon">3</span>
-              while — цикл
-            </a>
-          </li>
-          <li>
-            <a href="#step4" class="nav-link">
-              <span class="nav-link-icon">4</span>
-              if и break — выход
-            </a>
-          </li>
-          <li>
-            <a href="#step5" class="nav-link">
-              <span class="nav-link-icon">5</span>
-              .lower() — чистим
-            </a>
-          </li>
-          <li>
-            <a href="#step6" class="nav-link">
-              <span class="nav-link-icon">6</span>
-              random — случайно
-            </a>
-          </li>
-          <li>
-            <a href="#step7" class="nav-link">
-              <span class="nav-link-icon">7</span>
-              f-строки — формат
-            </a>
-          </li>
+          <li><a href="#print" class="nav-link"><span class="nav-link-icon">1</span>print() — вывод</a></li>
+          <li><a href="#variables" class="nav-link"><span class="nav-link-icon">2</span>Переменные и типы</a></li>
+          <li><a href="#input" class="nav-link"><span class="nav-link-icon">3</span>input() — ввод</a></li>
+          <li><a href="#strings" class="nav-link"><span class="nav-link-icon">4</span>Строки и методы</a></li>
+          <li><a href="#fstrings" class="nav-link"><span class="nav-link-icon">5</span>f-строки</a></li>
         </ul>
       </div>
 
       <div class="nav-section">
-        <div class="nav-section-title">Дополнительно</div>
+        <div class="nav-section-title">Управление</div>
         <ul class="nav-links">
-          <li>
-            <a href="#bonus" class="nav-link">
-              <span class="nav-link-icon">🎁</span>
-              Бонус: Словари
-            </a>
-          </li>
-          <li>
-            <a href="#final" class="nav-link">
-              <span class="nav-link-icon">🏁</span>
-              Финал
-            </a>
-          </li>
-          <li>
-            <a href="#cheatsheet" class="nav-link">
-              <span class="nav-link-icon">📋</span>
-              Шпаргалка
-            </a>
-          </li>
+          <li><a href="#if" class="nav-link"><span class="nav-link-icon">6</span>if/else — выбор</a></li>
+          <li><a href="#while" class="nav-link"><span class="nav-link-icon">7</span>while — циклы</a></li>
+          <li><a href="#break" class="nav-link"><span class="nav-link-icon">8</span>break — выход</a></li>
+        </ul>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Структуры данных</div>
+        <ul class="nav-links">
+          <li><a href="#lists" class="nav-link"><span class="nav-link-icon">9</span>Списки</a></li>
+          <li><a href="#dicts" class="nav-link"><span class="nav-link-icon">10</span>Словари</a></li>
+          <li><a href="#random" class="nav-link"><span class="nav-link-icon">11</span>random — случайность</a></li>
+        </ul>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Практика</div>
+        <ul class="nav-links">
+          <li><a href="#step1" class="nav-link"><span class="nav-link-icon">⚙️</span>Шаг 1: Каркас бота</a></li>
+          <li><a href="#step2" class="nav-link"><span class="nav-link-icon">⚙️</span>Шаг 2: Приветствие</a></li>
+          <li><a href="#step3" class="nav-link"><span class="nav-link-icon">⚙️</span>Шаг 3: Бесконечный диалог</a></li>
+          <li><a href="#step4" class="nav-link"><span class="nav-link-icon">⚙️</span>Шаг 4: Выход по команде</a></li>
+          <li><a href="#step5" class="nav-link"><span class="nav-link-icon">⚙️</span>Шаг 5: Обработка регистра</a></li>
+          <li><a href="#step6" class="nav-link"><span class="nav-link-icon">⚙️</span>Шаг 6: Случайные ответы</a></li>
+          <li><a href="#step7" class="nav-link"><span class="nav-link-icon">⚙️</span>Шаг 7: Персонализация</a></li>
+          <li><a href="#step8" class="nav-link"><span class="nav-link-icon">⚙️</span>Шаг 8: Интеллект (словари)</a></li>
+        </ul>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Завершение</div>
+        <ul class="nav-links">
+          <li><a href="#final" class="nav-link"><span class="nav-link-icon">🏁</span>Финальный код</a></li>
+          <li><a href="#cheatsheet" class="nav-link"><span class="nav-link-icon">📋</span>Шпаргалка</a></li>
         </ul>
       </div>
     </nav>
@@ -1159,7 +1021,7 @@
     </div>
   </aside>
 
-  <!-- Кнопка меню (мобильная) -->
+  <!-- Кнопка меню (видна всегда) -->
   <button class="menu-btn" id="sidebarToggle" aria-label="Открыть меню">
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -1169,117 +1031,87 @@
   </button>
 
   <!-- Основной контент -->
-  <main class="main-content">
-    <!-- Hero секция -->
+  <main class="main-content" id="mainContent">
+    <!-- Hero -->
     <section class="hero">
       <div class="container">
         <div class="hero-badge badge badge-secondary">
-          🎓 Обучение через решение проблем
+          🎓 Полноценный урок: 12+ страниц теории
         </div>
         
         <h1 class="hero-title">
-          Создаём говорящего<br>
-          <span class="gradient-text">робота на Python</span>
+          Создаём чат-бота<br>
+          <span class="gradient-text">на Python с нуля</span>
         </h1>
         
         <p class="hero-subtitle">
-          Стиль Фейнмана: понятно даже 8-летнему. Научим компьютер разговаривать за полтора часа!
+          От переменных и циклов до словарей и случайных чисел. Каждый новый синтаксис сразу добавляем в бота. Полный код в конце.
         </p>
         
         <div class="hero-cta">
-          <a href="#step1" class="button button-primary">
-            Начать обучение →
+          <a href="#print" class="button button-primary">
+            Начать изучение →
           </a>
-          <a href="#cheatsheet" class="button button-secondary">
-            К шпаргалке
+          <a href="#final" class="button button-secondary">
+            Сразу финальный код
           </a>
         </div>
       </div>
     </section>
 
-    <!-- Введение -->
+    <!-- Введение: Python и архитектура компьютера -->
     <section class="section" id="intro">
       <div class="container">
         <div class="section-header">
           <span class="badge badge-primary section-badge">👋</span>
-          <h2 class="section-title">Добро пожаловать в мир волшебства!</h2>
+          <h2 class="section-title">Почему Python — лучший выбор для старта</h2>
         </div>
         
-        <p>Привет, будущий программист! Сегодня мы с тобой сделаем что-то невероятное: <strong>научим компьютер разговаривать</strong>. Да-да, ты сможешь написать программу, которая будет отвечать тебе, как настоящий друг!</p>
+        <p>Компьютер работает на машинном коде — наборе инструкций для процессора. Человеку писать на нём крайне сложно. Python выступает в роли переводчика: вы пишете код на понятном языке, интерпретатор преобразует его в машинные команды.</p>
         
-        <p>Но сначала — маленькая тайна...</p>
-
-        <h3>🐶 Компьютер — это очень послушный, но очень глупый робот-щенок</h3>
-        
-        <p>Представь, что внутри твоего компьютера живёт робот-щенок 🤖🐶</p>
-        
-        <ul>
-          <li>Он очень хочет тебе помочь.</li>
-          <li>Он может делать миллионы вещей в секунду.</li>
-          <li><strong>Но!</strong> Он понимает только один язык: «0» — это «нет тока», «1» — это «есть ток».</li>
-        </ul>
-
-        <p>Если бы мы говорили с ним на его языке, чтобы просто сказать «Привет», нам пришлось бы написать примерно так:</p>
-
-        <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Binary</span>
-          </div>
-          <pre><code>01001000 01101001 01110000 01110001 01100101 01110100</code></pre>
-        </div>
-
-        <p>Это как объяснять щенку квантовую физику — сложно, долго и очень скучно!</p>
-
-        <h3>✨ Поэтому люди придумали Python — твой волшебный свисток</h3>
-
-        <blockquote>
-          <p><strong>Python — это как свисток для дрессировки робота-щенка.</strong> 🐕</p>
-        </blockquote>
-
-        <ul>
-          <li>Ты свистишь (пишешь простое слово <code>print</code>),</li>
-          <li>А переводчик (Python) говорит щенку на его языке: «А ну-ка, покажи, что умеешь!»,</li>
-          <li>И щенок выполняет!</li>
-        </ul>
-
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>Особенность</th>
-                <th>Что это значит для тебя</th>
+                <th>Характеристика</th>
+                <th>Преимущество</th>
+                <th>Пример</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>📝 Читается как английский</td>
-                <td><code>print("Привет")</code> — понятно даже без перевода</td>
+                <td>Читаемость</td>
+                <td>Код похож на английский</td>
+                <td><code>print("Hello")</code> — очевидно</td>
               </tr>
               <tr>
-                <td>⚡ Не нужно «собирать» программу</td>
-                <td>Написал → нажал «Запустить» → готово!</td>
+                <td>Динамическая типизация</td>
+                <td>Не нужно объявлять тип переменной</td>
+                <td><code>x = 5</code> затем <code>x = "строка"</code></td>
               </tr>
               <tr>
-                <td>🧩 Прощает мелкие ошибки</td>
-                <td>Забыл пробел? Python подскажет, где исправить</td>
+                <td>Автоматическое управление памятью</td>
+                <td>Нет ручного выделения/освобождения</td>
+                <td>Сборщик мусора работает сам</td>
               </tr>
               <tr>
-                <td>🎁 Огромная библиотека готовых «инструментов»</td>
-                <td>Хочешь случайное число? Есть кнопка!</td>
+                <td>Огромная стандартная библиотека</td>
+                <td>Готовые модули на все случаи</td>
+                <td><code>random, datetime, os, sys</code></td>
+              </tr>
+              <tr>
+                <td>Интерпретируемость</td>
+                <td>Написал — сразу запустил</td>
+                <td>Нет этапа компиляции</td>
               </tr>
             </tbody>
           </table>
         </div>
-
+        
         <div class="callout callout-info">
           <div class="callout-icon">🎯</div>
           <div class="callout-content">
-            <p><strong>Ключевая мысль:</strong> Python — это твой волшебный переводчик между тобой и компьютером. Ты говоришь просто — компьютер понимает сложно.</p>
+            <p><strong>Цель урока</strong> — написать программу, которая ведёт диалог с пользователем, понимает ключевые слова и отвечает разнообразно. Мы пройдём все этапы: от примитивной программы до интеллектуального бота.</p>
           </div>
         </div>
       </div>
@@ -1290,566 +1122,813 @@
       <div class="container">
         <div class="section-header">
           <span class="badge badge-primary section-badge">🛠️</span>
-          <h2 class="section-title">Подготовка: Всё готово к старту!</h2>
+          <h2 class="section-title">Подготовка окружения</h2>
         </div>
-        
-        <p>Прежде чем начать, давай проверим, что у нас есть всё необходимое:</p>
         
         <ul class="checklist">
           <li>
             <span class="check-icon">✓</span>
-            <span><strong>Python 3</strong> установлен (проверь в терминале: <code>python --version</code>)</span>
+            <span><strong>Установка Python:</strong> проверьте версию: <code>python --version</code> (или <code>python3</code>). Если не установлен — скачайте с python.org</span>
           </li>
           <li>
             <span class="check-icon">✓</span>
-            <span><strong>VS Code</strong> открыт, в нём создан файл <code>bot.py</code></span>
+            <span><strong>Создайте папку для проекта</strong> (например, <code>python_bot</code>)</span>
           </li>
           <li>
             <span class="check-icon">✓</span>
-            <span><strong>Терминал</strong> открыт в папке с файлом</span>
+            <span><strong>Создайте файл</strong> <code>bot.py</code> в этой папке</span>
           </li>
           <li>
             <span class="check-icon">✓</span>
-            <span><strong>Настроение</strong> — отличное! 🚀</span>
+            <span><strong>Откройте терминал</strong> в этой папке</span>
+          </li>
+          <li>
+            <span class="check-icon">✓</span>
+            <span><strong>Редактор кода:</strong> VS Code, PyCharm или любой текстовый редактор</span>
           </li>
         </ul>
 
-        <div class="callout callout-warning">
-          <div class="callout-icon">⚠️</div>
-          <div class="callout-content">
-            <p>Если что-то не так — не переживай, позови преподавателя, он поможет. Мы не будем тратить время на установку. Сегодня только творим!</p>
-          </div>
-        </div>
+        <p>Все примеры мы будем писать в <code>bot.py</code> и сразу запускать командой <code>python bot.py</code> (или <code>python3 bot.py</code>).</p>
       </div>
     </section>
 
-    <!-- Шаг 1 -->
-    <section class="section" id="step1">
+    <!-- print -->
+    <section class="section" id="print">
       <div class="container">
         <div class="section-header">
           <span class="step-number">1</span>
-          <h2 class="section-title">Учим робота говорить (функция <code>print</code>)</h2>
+          <h2 class="section-title">Функция <code>print()</code> — первый вывод</h2>
         </div>
 
-        <h3>🔍 Проблема</h3>
-        <p>Ты открыл редактор, написал первую программу и запустил... В терминале — тишина. 🤫 Программа ничего не вывела, и непонятно: работает она или нет?</p>
+        <h3>Проблема</h3>
+        <p>Программа должна что-то показывать пользователю. Без вывода мы не знаем, работает ли она.</p>
 
-        <h3>💡 Решение: Волшебная кнопка <code>print()</code></h3>
-        
-        <blockquote>
-          <p><code>print()</code> — это как кнопка «Скажи это вслух» для компьютера. 🔊</p>
-        </blockquote>
-
-        <h4>Как ей пользоваться:</h4>
-        <ol>
-          <li>Пишешь слово <code>print</code> — это как нажать на кнопку 🔘</li>
-          <li>В скобочках <code>()</code> пишешь то, что хочешь сказать</li>
-          <li>Текст всегда прячем в кавычки <code>""</code> — как в бутерброд: 🍞-начинка-🍞</li>
-        </ol>
+        <h3>Теория</h3>
+        <p><code>print()</code> — встроенная функция, которая выводит переданные аргументы в стандартный поток вывода (обычно терминал).</p>
+        <ul>
+          <li><strong>Синтаксис:</strong> <code>print(объект1, объект2, ..., sep=' ', end='\n')</code></li>
+          <li><strong>sep</strong> — разделитель между объектами (по умолчанию пробел).</li>
+          <li><strong>end</strong> — завершающий символ (по умолчанию перевод строки).</li>
+          <li><strong>Текстовые строки</strong> обязательно заключаются в кавычки <code>" "</code> или <code>' '</code>.</li>
+        </ul>
 
         <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Python</span>
-          </div>
-          <pre><code><span class="function">print</span>(<span class="string">"Привет, мир!"</span>)</code></pre>
-        </div>
+          <div class="code-header"><span class="code-lang">Python</span></div>
+          <pre><code><span class="comment"># Базовый вывод</span>
+<span class="function">print</span>(<span class="string">"Привет, мир!"</span>)
 
-        <p><strong>Что произойдёт:</strong> Компьютер возьмёт твои слова из кавычек и покажет их на экране. Как будто робот-щенок тявкнул: «Привет, мир!» 🐶</p>
+<span class="comment"># Несколько аргументов</span>
+<span class="function">print</span>(<span class="string">"Сегодня"</span>, <span class="string">"отличный"</span>, <span class="string">"день"</span>)
 
-        <h3>🧪 Давай попробуем вместе!</h3>
-        <ol>
-          <li>Открой файл <code>bot.py</code> в VS Code</li>
-          <li>Напиши внутри:
-            <div class="code-block">
-              <div class="code-header">
-                <div class="code-dots">
-                  <div class="code-dot"></div>
-                  <div class="code-dot"></div>
-                  <div class="code-dot"></div>
-                </div>
-                <span class="code-lang">Python</span>
-              </div>
-              <pre><code><span class="function">print</span>(<span class="string">"Привет, я твой первый робот!"</span>)</code></pre>
-            </div>
-          </li>
-          <li>Сохрани файл (<code>Ctrl+S</code>)</li>
-          <li>В терминале запусти: <code>python bot.py</code></li>
-        </ol>
-
-        <div class="callout callout-success">
-          <div class="callout-icon">🎉</div>
-          <div class="callout-content">
-            <p><strong>Поздравляю!</strong> Ты только что отдал первую команду компьютеру!</p>
-          </div>
-        </div>
-
-        <h3>🎨 Немного магии: что ещё умеет <code>print</code>?</h3>
-
-        <p><strong>Можно выводить несколько вещей сразу:</strong></p>
-        <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Python</span>
-          </div>
-          <pre><code><span class="function">print</span>(<span class="string">"Меня зовут"</span>, <span class="string">"Робот"</span>, <span class="string">"и я"</span>, <span class="string">"умею"</span>, <span class="string">"говорить!"</span>)
-<span class="comment"># Выведет: Меня зовут Робот и я умею говорить!</span></code></pre>
+<span class="comment"># Изменяем разделитель и окончание</span>
+<span class="function">print</span>(<span class="string">"Python"</span>, <span class="string">"Java"</span>, <span class="string">"C++"</span>, sep=<span class="string">" | "</span>, end=<span class="string">"!\n"</span>)</code></pre>
         </div>
 
         <div class="callout callout-info">
-          <div class="callout-icon">🎯</div>
+          <div class="callout-icon">💡</div>
           <div class="callout-content">
-            <p><strong>Ключевая мысль шага:</strong> <code>print()</code> — это кнопка «Скажи это вслух». Текст всегда в кавычках!</p>
+            <p><code>print()</code> автоматически переводит строку. Чтобы подавить это, используйте <code>end=""</code>.</p>
           </div>
         </div>
-
-        <details>
-          <summary>❓ Проверь себя</summary>
-          <div>
-            <p><strong>1. Что выведет <code>print("Я люблю программировать!")</code>?</strong></p>
-            <p>Ответ: <code>Я люблю программировать!</code></p>
-            
-            <p><strong>2. Как написать код, чтобы на экране появилось: <code>Привет, [твоё имя]</code>?</strong></p>
-            <p>Ответ: <code>print("Привет, [твоё имя]")</code> — замени <code>[твоё имя]</code> на своё настоящее имя в кавычках!</p>
-          </div>
-        </details>
       </div>
     </section>
 
-    <!-- Шаг 2 -->
-    <section class="section" id="step2">
+    <!-- Переменные и типы -->
+    <section class="section" id="variables">
       <div class="container">
         <div class="section-header">
           <span class="step-number">2</span>
-          <h2 class="section-title">Учим робота слушать (<code>input</code> и переменные)</h2>
+          <h2 class="section-title">Переменные и базовые типы данных</h2>
         </div>
 
-        <h3>🔍 Проблема</h3>
-        <p>Наш робот умеет говорить, но он нас не слышит! 🙉 Ты запускаешь программу, робот говорит «Привет!»... и сразу завершает работу.</p>
+        <h3>Проблема</h3>
+        <p>Нужно где-то хранить данные, введённые пользователем, и промежуточные результаты.</p>
 
-        <h3>💡 Решение, часть 1: Уши для робота — <code>input()</code></h3>
-
-        <blockquote>
-          <p><code>input()</code> — это как если бы робот наклонил ушко к тебе: «Я слушаю...» 👂</p>
-        </blockquote>
-
-        <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Python</span>
-          </div>
-          <pre><code><span class="function">print</span>(<span class="string">"Робот: Привет! Как тебя зовут?"</span>)
-name = <span class="function">input</span>(<span class="string">"Ты: "</span>)
-<span class="function">print</span>(<span class="string">"Робот: Приятно познакомиться!"</span>)</code></pre>
-        </div>
-
-        <h3>💡 Решение, часть 2: Коробочки для подарков — Переменные</h3>
-
-        <blockquote>
-          <p><strong>Переменная — это коробочка с наклейкой.</strong> 🎁</p>
-        </blockquote>
-
-        <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Python</span>
-          </div>
-          <pre><code><span class="comment"># 🤖 Робот спрашивает и ждёт ответа</span>
-<span class="comment"># input() — уши, = — положить в коробочку, name — наклейка</span>
-name = <span class="function">input</span>(<span class="string">"Как тебя зовут? "</span>)
-
-<span class="comment"># 🤖 Робот достаёт ответ из коробочки 'name' и говорит</span>
-<span class="function">print</span>(<span class="string">"Приятно познакомиться,"</span>, name)</code></pre>
-        </div>
-
-        <div class="callout callout-warning">
-          <div class="callout-icon">⚠️</div>
-          <div class="callout-content">
-            <p><strong>Важное правило:</strong> Всё, что слышит <code>input()</code> — это ТЕКСТ. Даже если ты ввёл число «8», для компьютера это просто значок «8», а не математическая восьмёрка.</p>
-          </div>
-        </div>
-
-        <div class="callout callout-info">
-          <div class="callout-icon">🎯</div>
-          <div class="callout-content">
-            <p><strong>Ключевая мысль шага:</strong> <code>input()</code> — это уши робота, переменная — коробочка, куда мы кладём то, что услышали.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Шаг 3 -->
-    <section class="section" id="step3">
-      <div class="container">
-        <div class="section-header">
-          <span class="step-number">3</span>
-          <h2 class="section-title">Делаем разговор бесконечным (цикл <code>while</code>)</h2>
-        </div>
-
-        <h3>🔍 Проблема</h3>
-        <p>Сейчас наш робот говорит один раз и... уходит спать 😴 А мы хотим, чтобы робот <strong>всегда был на связи</strong>!</p>
-
-        <h3>💡 Решение: Игра «Повторяй за мной» — цикл <code>while</code></h3>
-
-        <blockquote>
-          <p><strong>Цикл — это как игра «Повторяй за мной». Делаем одно и то же, пока не скажу «стоп»!</strong> 🔁</p>
-        </blockquote>
-
-        <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Python</span>
-          </div>
-          <pre><code><span class="function">print</span>(<span class="string">"Робот: Привет! Я всегда на связи. Пиши 'стоп' для выхода."</span>)
-
-<span class="keyword">while</span> <span class="keyword">True</span>:  <span class="comment"># 🔁 Начинаем бесконечную игру!</span>
-    user_text = <span class="function">input</span>(<span class="string">"Ты: "</span>)
-    <span class="function">print</span>(<span class="string">"Робот: Я слышу тебя!"</span>)</code></pre>
-        </div>
-
-        <div class="diagram">
-          <pre>
-    ┌─────────────────┐
-    │  while True:    │
-    └────────┬────────┘
-             │
-  ┌──────────▼──────────┐
-  │ 👂 input("Ты: ")    │
-  │ 🗣️ print("...")     │
-  └──────────┬──────────┘
-             │
-             ▼
-    (возвращаемся наверх!)
-          </pre>
-        </div>
-
-        <div class="callout callout-warning">
-          <div class="callout-icon">⚠️</div>
-          <div class="callout-content">
-            <p><strong>Осторожно!</strong> Нажать <code>Ctrl+C</code> в терминале — это как выдернуть шнур из розетки 🔌 Научим робота выходить вежливо в следующем шаге!</p>
-          </div>
-        </div>
-
-        <div class="callout callout-info">
-          <div class="callout-icon">🎯</div>
-          <div class="callout-content">
-            <p><strong>Ключевая мысль шага:</strong> <code>while True</code> — это кнопка «Повторять вечно».</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Шаг 4 -->
-    <section class="section" id="step4">
-      <div class="container">
-        <div class="section-header">
-          <span class="step-number">4</span>
-          <h2 class="section-title">Учим робота выходить по команде (<code>if</code> и <code>break</code>)</h2>
-        </div>
-
-        <h3>🔍 Проблема</h3>
-        <p>Наш робот работает вечно, но как ему сказать «всё, хватит»? 🛑</p>
-
-        <h3>💡 Решение: Робот-детектив — <code>if</code></h3>
-
-        <blockquote>
-          <p><code>if</code> — это как если бы робот стал детективом. Он смотрит на твоё сообщение и спрашивает: «Это то, что я ищу?» 🔍</p>
-        </blockquote>
+        <h3>Теория</h3>
+        <p><strong>Переменная</strong> — это именованный контейнер для данных. Python определяет тип автоматически (динамическая типизация).</p>
 
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>Знак</th>
-                <th>Что делает</th>
-                <th>Аналогия</th>
+                <th>Тип</th>
+                <th>Название</th>
+                <th>Пример</th>
+                <th>Особенности</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><code>=</code></td>
-                <td>Положить в коробочку</td>
-                <td>«Положи яблоко в коробку» 🍎→📦</td>
+                <td><code>int</code></td>
+                <td>Целое число</td>
+                <td><code>age = 25</code></td>
+                <td>Неограниченная точность</td>
               </tr>
               <tr>
-                <td><code>==</code></td>
-                <td>Сравнить: одинаковые ли?</td>
-                <td>«Яблоко такое же, как на столе?» 🍎❓🍎</td>
+                <td><code>float</code></td>
+                <td>Число с плавающей точкой</td>
+                <td><code>price = 99.99</code></td>
+                <td>Двойная точность</td>
+              </tr>
+              <tr>
+                <td><code>str</code></td>
+                <td>Строка</td>
+                <td><code>name = "Анна"</code></td>
+                <td>Неизменяема, поддерживает индексацию</td>
+              </tr>
+              <tr>
+                <td><code>bool</code></td>
+                <td>Логический</td>
+                <td><code>is_ready = True</code></td>
+                <td>Только <code>True</code> или <code>False</code></td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <h3>💡 Стоп-кран — <code>break</code></h3>
-
-        <blockquote>
-          <p><code>break</code> — это кнопка «Срочно остановись!» 🚨</p>
-        </blockquote>
-
         <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Python</span>
-          </div>
-          <pre><code><span class="function">print</span>(<span class="string">"Робот: Привет! Пиши 'стоп' для выхода."</span>)
+          <div class="code-header"><span class="code-lang">Python</span></div>
+          <pre><code><span class="comment"># Создание переменных</span>
+user_name = <span class="string">"Максим"</span>
+user_age = <span class="number">17</span>
+temperature = <span class="number">36.6</span>
+is_student = <span class="keyword">True</span>
 
-<span class="keyword">while</span> <span class="keyword">True</span>:
-    user_text = <span class="function">input</span>(<span class="string">"Ты: "</span>)
-    
-    <span class="comment"># 🔍 Робот-детектив проверяет</span>
-    <span class="keyword">if</span> user_text == <span class="string">"стоп"</span>:
-        <span class="function">print</span>(<span class="string">"Робот: Пока! Было приятно пообщаться! 👋"</span>)
-        <span class="keyword">break</span>  <span class="comment"># 🚨 Стоп-кран! Выходим из цикла</span>
-    
-    <span class="function">print</span>(<span class="string">"Робот: Я слышу тебя!"</span>)</code></pre>
-        </div>
-
-        <div class="callout callout-info">
-          <div class="callout-icon">🎯</div>
-          <div class="callout-content">
-            <p><strong>Ключевая мысль шага:</strong> <code>if</code> — это вопрос «Это то?», <code>break</code> — это кнопка «Выход из цикла». Для сравнения используем <code>==</code>!</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Шаг 5 -->
-    <section class="section" id="step5">
-      <div class="container">
-        <div class="section-header">
-          <span class="step-number">5</span>
-          <h2 class="section-title">Делаем робота «всеядным» (<code>.lower()</code> и <code>.strip()</code>)</h2>
-        </div>
-
-        <h3>🔍 Проблема</h3>
-        <p>Наш робот — очень строгий учитель 🧐 Ты пишешь «Стоп» или «СТОП» — он не понимает. Только «стоп» (маленькими буквами) — он реагирует!</p>
-
-        <h3>💡 Решение: Волшебные очистители для текста</h3>
-
-        <div class="grid-2">
-          <div class="feature-item">
-            <div class="feature-icon">🪄</div>
-            <div class="feature-text">
-              <h5><code>.lower()</code></h5>
-              <p>«Сделай всё маленьким» — превращает все большие буквы в маленькие: <code>"СТОП".lower()</code> → <code>"стоп"</code></p>
-            </div>
-          </div>
-
-          <div class="feature-item">
-            <div class="feature-icon">🪄</div>
-            <div class="feature-text">
-              <h5><code>.strip()</code></h5>
-              <p>«Обрежь лишнее» — убирает пробелы в начале и в конце: <code>"  стоп  ".strip()</code> → <code>"стоп"</code></p>
-            </div>
-          </div>
-        </div>
-
-        <h4>Можно использовать обе сразу!</h4>
-        <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Python</span>
-          </div>
-          <pre><code><span class="comment"># ✨ Чистим текст перед проверкой</span>
-clean_text = user_text.lower().strip()
-
-<span class="keyword">if</span> clean_text == <span class="string">"стоп"</span>:
-    <span class="function">print</span>(<span class="string">"Робот: Пока!"</span>)
-    <span class="keyword">break</span></code></pre>
-        </div>
-
-        <div class="callout callout-info">
-          <div class="callout-icon">🎯</div>
-          <div class="callout-content">
-            <p><strong>Ключевая мысль шага:</strong> <code>.lower()</code> и <code>.strip()</code> — волшебные очистители, которые делают текст «удобным» для сравнения.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Шаг 6 -->
-    <section class="section" id="step6">
-      <div class="container">
-        <div class="section-header">
-          <span class="step-number">6</span>
-          <h2 class="section-title">Делаем робота интересным (списки и <code>random</code>)</h2>
-        </div>
-
-        <h3>🔍 Проблема</h3>
-        <p>Наш робот говорит одно и то же: «Я слышу тебя!» 🤖🔁 Скучно!</p>
-
-        <h3>💡 Решение: Мешок с фразами — список</h3>
-
-        <blockquote>
-          <p><strong>Список — это как коробка с конфетами. В коробке может быть много разных конфет!</strong> 🍬🍫🍭</p>
-        </blockquote>
-
-        <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Python</span>
-          </div>
-          <pre><code><span class="keyword">import</span> random  <span class="comment"># 🔌 Подключаем "машину случайностей"</span>
-
-<span class="comment"># 🎒 Мешок с фразами</span>
-phrases = [
-    <span class="string">"Интересно!"</span>,
-    <span class="string">"Понимаю!"</span>,
-    <span class="string">"Круто!"</span>,
-    <span class="string">"Расскажи ещё!"</span>,
-    <span class="string">"Здорово!"</span>
-]
-
-<span class="comment"># 🎲 Робот тянет случайную фразу из мешка!</span>
-<span class="function">print</span>(<span class="string">"Робот:"</span>, random.choice(phrases))</code></pre>
+<span class="comment"># Проверка типа</span>
+<span class="function">print</span>(<span class="function">type</span>(user_name))  <span class="comment"># <class 'str'></span></code></pre>
         </div>
 
         <div class="callout callout-warning">
           <div class="callout-icon">⚠️</div>
           <div class="callout-content">
-            <p><strong>Важно:</strong> В программировании счёт начинается с 0, а не с 1! <code>phrases[0]</code> — это первый элемент.</p>
-          </div>
-        </div>
-
-        <div class="callout callout-info">
-          <div class="callout-icon">🎯</div>
-          <div class="callout-content">
-            <p><strong>Ключевая мысль шага:</strong> Список — это коробка с вариантами, <code>random.choice()</code> — волшебная рука, которая достаёт один случайно.</p>
+            <p>Имена переменных не могут начинаться с цифры, содержать спецсимволы (кроме _) и быть ключевыми словами (<code>if, while, class</code> и т.д.).</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Шаг 7 -->
-    <section class="section" id="step7">
+    <!-- input -->
+    <section class="section" id="input">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">3</span>
+          <h2 class="section-title">Функция <code>input()</code> — взаимодействие с пользователем</h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Программа работает в одну сторону. Нужно получать данные от пользователя.</p>
+
+        <h3>Теория</h3>
+        <p><code>input([prompt])</code> — приостанавливает выполнение, выводит подсказку (если передана) и возвращает введённую строку.</p>
+        <p><strong>Важно:</strong> <code>input()</code> всегда возвращает строку (<code>str</code>). Если нужно число — преобразуйте явно: <code>int(input())</code>.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Python</span></div>
+          <pre><code><span class="comment"># Простой ввод</span>
+name = <span class="function">input</span>(<span class="string">"Как тебя зовут? "</span>)
+<span class="function">print</span>(<span class="string">"Привет,"</span>, name)
+
+<span class="comment"># Преобразование в число</span>
+age = <span class="function">int</span>(<span class="function">input</span>(<span class="string">"Сколько тебе лет? "</span>))
+<span class="function">print</span>(<span class="string">"Через год тебе будет"</span>, age + <span class="number">1</span>)</code></pre>
+        </div>
+
+        <div class="callout callout-warning">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-content">
+            <p>Если пользователь введёт не число, а <code>int()</code> вызовет ошибку <code>ValueError</code>. Обработку ошибок рассмотрим позже.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Строки и методы -->
+    <section class="section" id="strings">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">4</span>
+          <h2 class="section-title">Строки и их методы</h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Пользователь может ввести текст в разном регистре, с пробелами. Нужно унифицировать ввод для сравнения.</p>
+
+        <h3>Теория</h3>
+        <p>Строки в Python — неизменяемые последовательности символов. Они имеют множество встроенных методов.</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Метод</th>
+                <th>Описание</th>
+                <th>Пример</th>
+                <th>Результат</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>.lower()</code></td>
+                <td>Все символы в нижний регистр</td>
+                <td><code>"PyThOn".lower()</code></td>
+                <td><code>"python"</code></td>
+              </tr>
+              <tr>
+                <td><code>.upper()</code></td>
+                <td>Все символы в верхний регистр</td>
+                <td><code>"python".upper()</code></td>
+                <td><code>"PYTHON"</code></td>
+              </tr>
+              <tr>
+                <td><code>.strip()</code></td>
+                <td>Удаляет пробелы в начале и конце</td>
+                <td><code>"  hello  ".strip()</code></td>
+                <td><code>"hello"</code></td>
+              </tr>
+              <tr>
+                <td><code>.replace(a, b)</code></td>
+                <td>Заменяет a на b</td>
+                <td><code>"abracadabra".replace("a", "o")</code></td>
+                <td><code>"obrocodobro"</code></td>
+              </tr>
+              <tr>
+                <td><code>.split(sep)</code></td>
+                <td>Разбивает строку по разделителю</td>
+                <td><code>"a,b,c".split(",")</code></td>
+                <td><code>['a','b','c']</code></td>
+              </tr>
+              <tr>
+                <td><code>.join(list)</code></td>
+                <td>Склеивает список строк</td>
+                <td><code>"-".join(["a","b"])</code></td>
+                <td><code>"a-b"</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Python</span></div>
+          <pre><code>text = <span class="string">"  Hello World!  "</span>
+clean = text.lower().strip()
+<span class="function">print</span>(clean)  <span class="comment"># "hello world!"</span></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- f-строки -->
+    <section class="section" id="fstrings">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">5</span>
+          <h2 class="section-title">Форматирование: f-строки</h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Соединять строки через <code>+</code> или запятые неудобно, особенно когда нужно вставить переменную внутрь текста.</p>
+
+        <h3>Теория</h3>
+        <p><strong>f-строки</strong> (formatted string literals) появились в Python 3.6. Перед кавычками ставится <code>f</code>, а в <code>{}</code> можно подставлять выражения.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Python</span></div>
+          <pre><code>name = <span class="string">"Анна"</span>
+age = <span class="number">8</span>
+
+<span class="comment"># Классический способ</span>
+<span class="function">print</span>(<span class="string">"Меня зовут"</span>, name, <span class="string">"и мне"</span>, age, <span class="string">"лет."</span>)
+
+<span class="comment"># f-строка — чисто и понятно</span>
+<span class="function">print</span>(<span class="string">f"Меня зовут {name} и мне {age} лет."</span>)
+<span class="function">print</span>(<span class="string">f"Через год будет {age + 1}."</span>)</code></pre>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <p>Внутри фигурных скобок можно использовать любые выражения, вызывать функции, даже <code>input()</code>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- if/else -->
+    <section class="section" id="if">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">6</span>
+          <h2 class="section-title">Условный оператор <code>if/elif/else</code></h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Нужно, чтобы программа принимала решения в зависимости от ввода.</p>
+
+        <h3>Теория</h3>
+        <p><code>if</code> проверяет условие. Если оно истинно, выполняется блок. <code>elif</code> — дополнительные проверки, <code>else</code> — если ни одно условие не сработало.</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Оператор сравнения</th>
+                <th>Значение</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>==</code></td><td>равно</td></tr>
+              <tr><td><code>!=</code></td><td>не равно</td></tr>
+              <tr><td><code>></code>, <code><</code></td><td>больше, меньше</td></tr>
+              <tr><td><code>>=</code>, <code><=</code></td><td>больше или равно, меньше или равно</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Python</span></div>
+          <pre><code>age = <span class="function">int</span>(<span class="function">input</span>(<span class="string">"Сколько лет? "</span>))
+
+<span class="keyword">if</span> age < <span class="number">18</span>:
+    <span class="function">print</span>(<span class="string">"Доступ запрещён."</span>)
+<span class="keyword">elif</span> age >= <span class="number">65</span>:
+    <span class="function">print</span>(<span class="string">"Вам положена скидка."</span>)
+<span class="keyword">else</span>:
+    <span class="function">print</span>(<span class="string">"Добро пожаловать!"</span>)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- while -->
+    <section class="section" id="while">
       <div class="container">
         <div class="section-header">
           <span class="step-number">7</span>
-          <h2 class="section-title">Робот запоминает твоё имя (f-строки)</h2>
+          <h2 class="section-title">Цикл <code>while</code></h2>
         </div>
 
-        <h3>🔍 Проблема</h3>
-        <p>Как роботу сказать «Привет, [твоё имя]»? 🤔</p>
+        <h3>Проблема</h3>
+        <p>Нужно повторять действия многократно, пока выполняется условие.</p>
 
-        <h3>💡 Решение: Волшебные дырочки в тексте — f-строки</h3>
-
-        <blockquote>
-          <p>Если перед кавычками поставить букву <code>f</code>, внутри строки можно делать «дырочки» <code>{}</code> и вставлять туда переменные! ✨</p>
-        </blockquote>
+        <h3>Теория</h3>
+        <p><code>while условие:</code> выполняет блок, пока условие истинно. Бесконечный цикл — <code>while True:</code></p>
 
         <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Python</span>
-          </div>
-          <pre><code>name = <span class="string">"Саша"</span>
-age = <span class="number">8</span>
+          <div class="code-header"><span class="code-lang">Python</span></div>
+          <pre><code><span class="comment"># Счётчик</span>
+count = <span class="number">0</span>
+<span class="keyword">while</span> count < <span class="number">5</span>:
+    <span class="function">print</span>(count)
+    count += <span class="number">1</span>
 
-<span class="comment"># f-строка — текст с дырочками!</span>
-<span class="function">print</span>(<span class="string">f"Привет, <span class="keyword">{name}</span>!"</span>)  <span class="comment"># Выведет: Привет, Саша!</span>
-<span class="function">print</span>(<span class="string">f"Тебе <span class="keyword">{age}</span> лет, через год будет <span class="keyword">{age + 1}</span>!"</span>)</code></pre>
-        </div>
-
-        <div class="callout callout-info">
-          <div class="callout-icon">🎯</div>
-          <div class="callout-content">
-            <p><strong>Ключевая мысль шага:</strong> f-строка — это текст с дырочками <code>{}</code>, куда компьютер сам вставит переменные. Ставь <code>f</code> перед кавычками!</p>
-          </div>
+<span class="comment"># Бесконечный цикл (остановка по break)</span>
+<span class="keyword">while</span> <span class="keyword">True</span>:
+    cmd = <span class="function">input</span>(<span class="string">"Команда: "</span>)
+    <span class="keyword">if</span> cmd == <span class="string">"exit"</span>:
+        <span class="keyword">break</span></code></pre>
         </div>
       </div>
     </section>
 
-    <!-- Бонус -->
-    <section class="section" id="bonus">
+    <!-- break -->
+    <section class="section" id="break">
       <div class="container">
         <div class="section-header">
-          <span class="badge badge-primary section-badge">🎁</span>
-          <h2 class="section-title">Бонус: Робот с «волшебной книжкой ответов»</h2>
+          <span class="step-number">8</span>
+          <h2 class="section-title">Оператор <code>break</code></h2>
         </div>
 
-        <div class="callout callout-info">
-          <div class="callout-icon">⏱️</div>
-          <div class="callout-content">
-            <p>Этот шаг — для тех, кто успевает и хочет больше!</p>
-          </div>
-        </div>
+        <h3>Проблема</h3>
+        <p>Нужно прервать выполнение цикла досрочно при выполнении условия.</p>
 
-        <h3>💡 Словарь — меню в кафе</h3>
-
-        <blockquote>
-          <p><strong>Словарь — это как меню в кафе. Слева — вопрос, справа — ответ!</strong> 📋</p>
-        </blockquote>
+        <h3>Теория</h3>
+        <p><code>break</code> немедленно завершает самый внутренний цикл.</p>
 
         <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Python</span>
-          </div>
+          <div class="code-header"><span class="code-lang">Python</span></div>
+          <pre><code><span class="keyword">while</span> <span class="keyword">True</span>:
+    word = <span class="function">input</span>(<span class="string">"Скажи что-нибудь: "</span>)
+    <span class="keyword">if</span> word == <span class="string">"стоп"</span>:
+        <span class="function">print</span>(<span class="string">"Завершаем."</span>)
+        <span class="keyword">break</span>
+    <span class="function">print</span>(<span class="string">"Ты сказал:"</span>, word)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Списки -->
+    <section class="section" id="lists">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">9</span>
+          <h2 class="section-title">Списки (<code>list</code>)</h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Нужно хранить множество однотипных элементов, например, варианты ответов.</p>
+
+        <h3>Теория</h3>
+        <p><strong>Список</strong> — упорядоченная изменяемая коллекция. Индексация с нуля.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Python</span></div>
+          <pre><code><span class="comment"># Создание</span>
+fruits = [<span class="string">"яблоко"</span>, <span class="string">"банан"</span>, <span class="string">"апельсин"</span>]
+
+<span class="comment"># Доступ по индексу</span>
+<span class="function">print</span>(fruits[<span class="number">0</span>])     <span class="comment"># яблоко</span>
+<span class="function">print</span>(fruits[-<span class="number">1</span>])    <span class="comment"># апельсин (последний)</span>
+
+<span class="comment"># Методы</span>
+fruits.append(<span class="string">"груша"</span>)     <span class="comment"># добавить в конец</span>
+fruits.remove(<span class="string">"банан"</span>)    <span class="comment"># удалить по значению</span>
+fruits.pop(<span class="number">0</span>)              <span class="comment"># удалить по индексу</span>
+fruits.sort()               <span class="comment"># сортировка</span>
+
+<span class="comment"># Длина</span>
+<span class="function">print</span>(<span class="function">len</span>(fruits))</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Словари -->
+    <section class="section" id="dicts">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">10</span>
+          <h2 class="section-title">Словари (<code>dict</code>)</h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Нужно хранить пары «вопрос — ответ» или другую структурированную информацию.</p>
+
+        <h3>Теория</h3>
+        <p><strong>Словарь</strong> — неупорядоченная коллекция пар ключ-значение. Ключи уникальны.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Python</span></div>
+          <pre><code><span class="comment"># Создание</span>
+ages = {<span class="string">"Анна"</span>: <span class="number">8</span>, <span class="string">"Борис"</span>: <span class="number">10</span>, <span class="string">"Вика"</span>: <span class="number">7</span>}
+
+<span class="comment"># Доступ по ключу</span>
+<span class="function">print</span>(ages[<span class="string">"Анна"</span>])    <span class="comment"># 8</span>
+
+<span class="comment"># Добавление/изменение</span>
+ages[<span class="string">"Глеб"</span>] = <span class="number">5</span>
+
+<span class="comment"># Проверка наличия</span>
+<span class="keyword">if</span> <span class="string">"Борис"</span> <span class="keyword">in</span> ages:
+    <span class="function">print</span>(<span class="string">"Борис есть!"</span>)
+
+<span class="comment"># Перебор</span>
+<span class="keyword">for</span> name, age <span class="keyword">in</span> ages.items():
+    <span class="function">print</span>(<span class="string">f"{name}: {age}"</span>)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- random -->
+    <section class="section" id="random">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">11</span>
+          <h2 class="section-title">Модуль <code>random</code></h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Нужна случайность в ответах, иначе бот слишком предсказуем.</p>
+
+        <h3>Теория</h3>
+        <p><code>import random</code> подключает модуль со множеством функций для генерации случайных чисел.</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Функция</th>
+                <th>Описание</th>
+                <th>Пример</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>random.random()</code></td>
+                <td>Случайное число от 0 до 1</td>
+                <td><code>0.374540</code></td>
+              </tr>
+              <tr>
+                <td><code>random.randint(a, b)</code></td>
+                <td>Целое число от a до b включительно</td>
+                <td><code>random.randint(1,10)</code></td>
+              </tr>
+              <tr>
+                <td><code>random.choice(list)</code></td>
+                <td>Случайный элемент из списка</td>
+                <td><code>random.choice(["да","нет"])</code></td>
+              </tr>
+              <tr>
+                <td><code>random.shuffle(list)</code></td>
+                <td>Перемешивает список на месте</td>
+                <td><code>random.shuffle(cards)</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Python</span></div>
           <pre><code><span class="keyword">import</span> random
 
-<span class="comment"># 🎒 Мешок с общими фразами</span>
-phrases = [<span class="string">"Интересно!"</span>, <span class="string">"Понимаю!"</span>, <span class="string">"Расскажи ещё!"</span>]
+answers = [<span class="string">"Да"</span>, <span class="string">"Нет"</span>, <span class="string">"Возможно"</span>, <span class="string">"Спроси позже"</span>]
+<span class="function">print</span>(<span class="string">"Ответ:"</span>, random.choice(answers))</code></pre>
+        </div>
+      </div>
+    </section>
 
-<span class="comment"># 📖 Волшебная книжка с ответами</span>
-answers_book = {
-    <span class="string">"привет"</span>: <span class="string">"Привет! 👋"</span>,
-    <span class="string">"как дела"</span>: <span class="string">"У меня всё отлично! А у тебя?"</span>,
-    <span class="string">"пока"</span>: <span class="string">"До встречи! 👋"</span>,
-    <span class="string">"кто ты"</span>: <span class="string">"Я робот, созданный тобой! 🤖"</span>
-}
+    <!-- ========== ПРАКТИЧЕСКАЯ ЧАСТЬ: ПОШАГОВОЕ СОЗДАНИЕ БОТА ========== -->
+
+    <!-- Шаг 1: Каркас -->
+    <section class="section" id="step1">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">⚙️ 1</span>
+          <h2 class="section-title">Создаём каркас бота</h2>
+        </div>
+
+        <h3>Задача</h3>
+        <p>Написать программу, которая просто запускается и выводит приветствие.</p>
+
+        <h3>Код</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bot.py</span></div>
+          <pre><code><span class="comment"># Шаг 1: базовая структура</span>
+<span class="function">print</span>(<span class="string">"Бот: Привет! Я готов к диалогу."</span>)</code></pre>
+        </div>
+
+        <p>Запустите программу. В терминале должно появиться сообщение.</p>
+      </div>
+    </section>
+
+    <!-- Шаг 2: Приветствие с именем -->
+    <section class="section" id="step2">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">⚙️ 2</span>
+          <h2 class="section-title">Запрос имени и персонализация</h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Бот говорит безлико. Хочется обращаться к пользователю по имени.</p>
+
+        <h3>Решение</h3>
+        <p>Используем <code>input()</code> для получения имени и сохраняем в переменную. Затем выводим персонализированное приветствие (пока без f-строк).</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bot.py</span></div>
+          <pre><code><span class="function">print</span>(<span class="string">"Бот: Привет! Я готов к диалогу."</span>)
+name = <span class="function">input</span>(<span class="string">"Бот: Как тебя зовут? "</span>)
+<span class="function">print</span>(<span class="string">"Бот: Приятно познакомиться,"</span>, name)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 3: Бесконечный диалог -->
+    <section class="section" id="step3">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">⚙️ 3</span>
+          <h2 class="section-title">Организуем бесконечный диалог</h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>После одного ответа программа завершается. Нужен цикл.</p>
+
+        <h3>Решение</h3>
+        <p>Оборачиваем основную логику в <code>while True:</code>. Пока бот будет просто повторять ввод пользователя.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bot.py</span></div>
+          <pre><code><span class="function">print</span>(<span class="string">"Бот: Привет! Я готов к диалогу."</span>)
+name = <span class="function">input</span>(<span class="string">"Бот: Как тебя зовут? "</span>)
+<span class="function">print</span>(<span class="string">"Бот: Приятно познакомиться,"</span>, name)
 
 <span class="keyword">while</span> <span class="keyword">True</span>:
-    user_text = <span class="function">input</span>(<span class="string">"Ты: "</span>)
-    clean_text = user_text.lower().strip()
+    user_input = <span class="function">input</span>(<span class="string">"Ты: "</span>)
+    <span class="function">print</span>(<span class="string">"Бот: Я слышу:"</span>, user_input)</code></pre>
+        </div>
+
+        <p><kbd>Ctrl+C</kbd> — единственный способ остановить.</p>
+      </div>
+    </section>
+
+    <!-- Шаг 4: Выход по команде -->
+    <section class="section" id="step4">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">⚙️ 4</span>
+          <h2 class="section-title">Выход по команде "пока"</h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Аварийное завершение некрасивое. Нужна вежливая остановка.</p>
+
+        <h3>Решение</h3>
+        <p>Используем <code>if</code> для проверки ввода и <code>break</code> для выхода.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bot.py</span></div>
+          <pre><code><span class="function">print</span>(<span class="string">"Бот: Привет! Я готов к диалогу."</span>)
+name = <span class="function">input</span>(<span class="string">"Бот: Как тебя зовут? "</span>)
+<span class="function">print</span>(<span class="string">"Бот: Приятно познакомиться,"</span>, name)
+
+<span class="keyword">while</span> <span class="keyword">True</span>:
+    user_input = <span class="function">input</span>(<span class="string">"Ты: "</span>)
+    <span class="keyword">if</span> user_input == <span class="string">"пока"</span>:
+        <span class="function">print</span>(<span class="string">"Бот: Пока! Было приятно пообщаться."</span>)
+        <span class="keyword">break</span>
+    <span class="function">print</span>(<span class="string">"Бот: Я слышу:"</span>, user_input)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 5: Обработка регистра -->
+    <section class="section" id="step5">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">⚙️ 5</span>
+          <h2 class="section-title">Игнорируем регистр и пробелы</h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Бот не понимает «Пока», «ПОКА» или «  пока  ». Нужно нормализовать ввод.</p>
+
+        <h3>Решение</h3>
+        <p>Применяем <code>.lower().strip()</code> к вводу перед сравнением.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bot.py</span></div>
+          <pre><code><span class="function">print</span>(<span class="string">"Бот: Привет! Я готов к диалогу."</span>)
+name = <span class="function">input</span>(<span class="string">"Бот: Как тебя зовут? "</span>)
+<span class="function">print</span>(<span class="string">"Бот: Приятно познакомиться,"</span>, name)
+
+<span class="keyword">while</span> <span class="keyword">True</span>:
+    user_input = <span class="function">input</span>(<span class="string">"Ты: "</span>)
+    clean = user_input.lower().strip()
+    <span class="keyword">if</span> clean == <span class="string">"пока"</span>:
+        <span class="function">print</span>(<span class="string">"Бот: Пока! Было приятно пообщаться."</span>)
+        <span class="keyword">break</span>
+    <span class="function">print</span>(<span class="string">"Бот: Я слышу:"</span>, user_input)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 6: Случайные ответы -->
+    <section class="section" id="step6">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">⚙️ 6</span>
+          <h2 class="section-title">Разнообразим ответы с помощью random</h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Бот всё время отвечает «Я слышу: ...». Скучно.</p>
+
+        <h3>Решение</h3>
+        <p>Создадим список фраз и будем выбирать случайную с помощью <code>random.choice()</code>.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bot.py</span></div>
+          <pre><code><span class="keyword">import</span> random
+
+<span class="function">print</span>(<span class="string">"Бот: Привет! Я готов к диалогу."</span>)
+name = <span class="function">input</span>(<span class="string">"Бот: Как тебя зовут? "</span>)
+<span class="function">print</span>(<span class="string">"Бот: Приятно познакомиться,"</span>, name)
+
+replies = [
+    <span class="string">"Интересно!"</span>,
+    <span class="string">"Понятно."</span>,
+    <span class="string">"Расскажи ещё."</span>,
+    <span class="string">"Здорово!"</span>,
+    <span class="string">"Ничего себе!"</span>
+]
+
+<span class="keyword">while</span> <span class="keyword">True</span>:
+    user_input = <span class="function">input</span>(<span class="string">"Ты: "</span>)
+    clean = user_input.lower().strip()
+    <span class="keyword">if</span> clean == <span class="string">"пока"</span>:
+        <span class="function">print</span>(<span class="string">"Бот: Пока! Было приятно пообщаться."</span>)
+        <span class="keyword">break</span>
+    reply = random.choice(replies)
+    <span class="function">print</span>(<span class="string">"Бот:"</span>, reply)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 7: Персонализация f-строками -->
+    <section class="section" id="step7">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">⚙️ 7</span>
+          <h2 class="section-title">Добавляем имя в ответы (f-строки)</h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Хочется, чтобы бот иногда обращался к пользователю по имени.</p>
+
+        <h3>Решение</h3>
+        <p>Обновим список <code>replies</code>, включив несколько f-строк с переменной <code>name</code>. Приветствие тоже сделаем через f-строку.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bot.py</span></div>
+          <pre><code><span class="keyword">import</span> random
+
+<span class="function">print</span>(<span class="string">"Бот: Привет! Я готов к диалогу."</span>)
+name = <span class="function">input</span>(<span class="string">"Бот: Как тебя зовут? "</span>)
+<span class="function">print</span>(<span class="string">f"Бот: Приятно познакомиться, {name}!"</span>)
+
+replies = [
+    <span class="string">"Интересно!"</span>,
+    <span class="string">"Понятно."</span>,
+    <span class="string">f"Расскажи ещё, {name}."</span>,
+    <span class="string">"Здорово!"</span>,
+    <span class="string">f"А что ты думаешь об этом, {name}?"</span>
+]
+
+<span class="keyword">while</span> <span class="keyword">True</span>:
+    user_input = <span class="function">input</span>(<span class="string">"Ты: "</span>)
+    clean = user_input.lower().strip()
+    <span class="keyword">if</span> clean == <span class="string">"пока"</span>:
+        <span class="function">print</span>(<span class="string">f"Бот: Пока, {name}! Было приятно пообщаться."</span>)
+        <span class="keyword">break</span>
+    reply = random.choice(replies)
+    <span class="function">print</span>(<span class="string">"Бот:"</span>, reply)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 8: Интеллектуальные ответы (словари) -->
+    <section class="section" id="step8">
+      <div class="container">
+        <div class="section-header">
+          <span class="step-number">⚙️ 8</span>
+          <h2 class="section-title">Добавляем «интеллект» через словари</h2>
+        </div>
+
+        <h3>Проблема</h3>
+        <p>Бот отвечает случайно, не понимая смысла фраз.</p>
+
+        <h3>Решение</h3>
+        <p>Создадим словарь <code>knowledge</code>, где ключ — нормализованная фраза, значение — ответ бота. Если ключ найден, используем его, иначе — случайный ответ из списка.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bot.py (ФИНАЛ)</span></div>
+          <pre><code><span class="keyword">import</span> random
+
+<span class="comment"># База знаний</span>
+knowledge = {
+    <span class="string">"привет"</span>: <span class="string">"Привет!"</span>,
+    <span class="string">"здравствуй"</span>: <span class="string">"Здравствуйте!"</span>,
+    <span class="string">"как дела"</span>: <span class="string">"У меня всё отлично! А у тебя?"</span>,
+    <span class="string">"кто ты"</span>: <span class="string">"Я бот, созданный на Python. Рад познакомиться!"</span>,
+    <span class="string">"что делаешь"</span>: <span class="string">"Общаюсь с тобой и учусь новому."</span>,
+    <span class="string">"спасибо"</span>: <span class="string">"Пожалуйста! Обращайся."</span>,
+    <span class="string">"погода"</span>: <span class="string">"Я не знаю погоду, но могу поговорить!"</span>,
+    <span class="string">"помощь"</span>: <span class="string">"Я понимаю несколько слов: привет, как дела, кто ты, пока..."</span>
+}
+
+<span class="comment"># Запас общих фраз</span>
+replies = [
+    <span class="string">"Интересно!"</span>,
+    <span class="string">"Понятно."</span>,
+    <span class="string">f"Расскажи ещё."</span>,
+    <span class="string">"Здорово!"</span>,
+    <span class="string">"Давай дальше."</span>,
+    <span class="string">"Неожиданно!"</span>
+]
+
+<span class="function">print</span>(<span class="string">"Бот: Привет! Я готов к диалогу."</span>)
+name = <span class="function">input</span>(<span class="string">"Бот: Как тебя зовут? "</span>)
+<span class="function">print</span>(<span class="string">f"Бот: Приятно познакомиться, {name}!"</span>)
+
+<span class="keyword">while</span> <span class="keyword">True</span>:
+    user_input = <span class="function">input</span>(<span class="string">"Ты: "</span>)
+    clean = user_input.lower().strip()
     
-    <span class="keyword">if</span> clean_text == <span class="string">"стоп"</span>:
-        <span class="function">print</span>(<span class="string">"Робот: Пока!"</span>)
+    <span class="keyword">if</span> clean == <span class="string">"пока"</span>:
+        <span class="function">print</span>(<span class="string">f"Бот: Пока, {name}! Было приятно пообщаться."</span>)
         <span class="keyword">break</span>
     
-    <span class="keyword">if</span> clean_text <span class="keyword">in</span> answers_book:
-        <span class="function">print</span>(<span class="string">"Робот:"</span>, answers_book[clean_text])
+    <span class="keyword">if</span> clean <span class="keyword">in</span> knowledge:
+        reply = knowledge[clean]
     <span class="keyword">else</span>:
-        <span class="function">print</span>(<span class="string">"Робот:"</span>, random.choice(phrases))</code></pre>
+        reply = random.choice(replies)
+    
+    <span class="function">print</span>(<span class="string">"Бот:"</span>, reply)</code></pre>
+        </div>
+
+        <div class="callout callout-success">
+          <div class="callout-icon">🎉</div>
+          <div class="callout-content">
+            <p>Это полноценный чат-бот! Вы можете расширять словарь <code>knowledge</code> и список <code>replies</code> бесконечно.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -1859,65 +1938,52 @@ answers_book = {
       <div class="container">
         <div class="section-header">
           <span class="badge badge-primary section-badge">🏁</span>
-          <h2 class="section-title">Финал: Что мы создали</h2>
+          <h2 class="section-title">Итоги и возможности развития</h2>
         </div>
+        
+        <p>Поздравляю! Вы прошли путь от нуля до создания функционального чат-бота. Что вы освоили:</p>
+        
+        <ul>
+          <li>Базовый синтаксис Python: переменные, типы данных, операторы.</li>
+          <li>Ввод и вывод: <code>print()</code>, <code>input()</code>, f-строки.</li>
+          <li>Управляющие конструкции: <code>if/elif/else</code>, циклы <code>while</code>, <code>break</code>.</li>
+          <li>Работа со строками: <code>.lower()</code>, <code>.strip()</code>.</li>
+          <li>Структуры данных: списки, словари.</li>
+          <li>Использование модулей: <code>import random</code>.</li>
+          <li>Пошаговое построение программы от простого к сложному.</li>
+        </ul>
 
-        <h3>🎉 Поздравляю! Ты создал своего первого чат-бота!</h3>
-
-        <p>За полтора часа ты прошёл путь от «компьютер — это чёрный ящик» до «я управляю компьютером!». Вот что ты теперь умеешь:</p>
-
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Навык</th>
-                <th>Где пригодится</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>print()</code></td>
-                <td>Любая программа, которая что-то показывает</td>
-              </tr>
-              <tr>
-                <td><code>input()</code></td>
-                <td>Формы, чаты, игры, калькуляторы</td>
-              </tr>
-              <tr>
-                <td>Переменные</td>
-                <td>Всё! Без переменных программирование невозможно</td>
-              </tr>
-              <tr>
-                <td><code>while True</code> + <code>break</code></td>
-                <td>Игры, серверы, обработчики событий</td>
-              </tr>
-              <tr>
-                <td><code>if-else</code></td>
-                <td>Логика любой программы</td>
-              </tr>
-              <tr>
-                <td><code>.lower()</code>, <code>.strip()</code></td>
-                <td>Чаты, поиск, валидация данных</td>
-              </tr>
-              <tr>
-                <td>Списки + <code>random.choice()</code></td>
-                <td>Игры, генерация контента, тесты</td>
-              </tr>
-              <tr>
-                <td>f-строки</td>
-                <td>Отчёты, сообщения, интерфейсы</td>
-              </tr>
-            </tbody>
-          </table>
+        <h3>Идеи для дальнейшего улучшения</h3>
+        <div class="grid-2">
+          <div class="feature-item">
+            <div class="feature-icon">➕</div>
+            <div class="feature-text">
+              <h5>Больше ключевых слов</h5>
+              <p>Добавьте в словарь новые фразы: "как тебя зовут", "что нового", "расскажи шутку".</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">📂</div>
+            <div class="feature-text">
+              <h5>Сохранение истории</h5>
+              <p>Записывайте диалог в файл с помощью <code>open()</code> и <code>write()</code>.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🔁</div>
+            <div class="feature-text">
+              <h5>Обработка ошибок</h5>
+              <p>Оберните преобразование чисел в <code>try/except</code>.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🌐</div>
+            <div class="feature-text">
+              <h5>Веб-интерфейс</h5>
+              <p>Используйте Flask, чтобы запустить бота в браузере.</p>
+            </div>
+          </div>
         </div>
-
-        <h3>💬 Финальные слова</h3>
-
-        <blockquote>
-          <p>«Программист — это не тот, кто знает всё. Программист — это тот, кто умеет находить ответы». 🔍</p>
-        </blockquote>
-
-        <p>Не переживай, если что-то не запомнил с первого раза. Программирование — это как езда на велосипеде: сначала падаешь, потом учишься держать равновесие, а потом — летишь! 🚴‍♂️💨</p>
       </div>
     </section>
 
@@ -1926,105 +1992,63 @@ answers_book = {
       <div class="container">
         <div class="section-header">
           <span class="badge badge-primary section-badge">📋</span>
-          <h2 class="section-title">Шпаргалка для быстрого старта</h2>
+          <h2 class="section-title">Шпаргалка (быстрый справочник)</h2>
         </div>
-
-        <h3>🔤 Базовый синтаксис</h3>
+        
         <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Python</span>
-          </div>
-          <pre><code><span class="comment"># Комментарий — для людей</span>
+          <div class="code-header"><span class="code-lang">Python Cheat Sheet</span></div>
+          <pre><code><span class="comment"># Вывод</span>
+<span class="function">print</span>(<span class="string">"текст"</span>, <span class="string">"ещё"</span>, sep=<span class="string">" "</span>, end=<span class="string">"\n"</span>)
 
-<span class="function">print</span>(<span class="string">"Текст"</span>)           <span class="comment"># Вывести на экран</span>
-<span class="function">input</span>(<span class="string">"Подсказка: "</span>)     <span class="comment"># Ждать ввод от пользователя</span>
+<span class="comment"># Ввод</span>
+var = <span class="function">input</span>(<span class="string">"Подсказка: "</span>)
 
-name = <span class="string">"Саша"</span>            <span class="comment"># Создать переменную</span>
-age = <span class="number">8</span>                  <span class="comment"># Числа без кавычек</span>
+<span class="comment"># Переменные</span>
+имя = <span class="string">"значение"</span>
+число = <span class="number">10</span>
+дробное = <span class="number">3.14</span>
+логическое = <span class="keyword">True</span>
 
-<span class="keyword">if</span> name == <span class="string">"Саша"</span>:       <span class="comment"># Если условие верно</span>
-    <span class="function">print</span>(<span class="string">"Привет!"</span>)     <span class="comment"># Сделай это (с отступом!)</span>
-<span class="keyword">else</span>:                    <span class="comment"># Иначе</span>
-    <span class="function">print</span>(<span class="string">"Не Саша"</span>)
+<span class="comment"># Условия</span>
+<span class="keyword">if</span> условие:
+    <span class="comment"># код</span>
+<span class="keyword">elif</span> другое:
+    <span class="comment"># код</span>
+<span class="keyword">else</span>:
+    <span class="comment"># код</span>
 
-<span class="keyword">while</span> <span class="keyword">True</span>:              <span class="comment"># Повторять вечно</span>
-    <span class="keyword">if</span> условие:
-        <span class="keyword">break</span>            <span class="comment"># Выйти из цикла</span>
+<span class="comment"># Циклы</span>
+<span class="keyword">while</span> условие:
+    <span class="comment"># код</span>
+    <span class="keyword">break</span>
 
-phrases = [<span class="string">"а"</span>, <span class="string">"б"</span>, <span class="string">"в"</span>]  <span class="comment"># Список</span>
-<span class="function">print</span>(phrases[<span class="number">0</span>])          <span class="comment"># Доступ по индексу (с 0!)</span>
+<span class="comment"># Строки</span>
+text.lower()
+text.upper()
+text.strip()
+text.replace(<span class="string">"a"</span>, <span class="string">"b"</span>)
 
-<span class="keyword">import</span> random              <span class="comment"># Подключить модуль</span>
-random.choice(phrases)     <span class="comment"># Случайный выбор</span>
+<span class="comment"># Списки</span>
+lst = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]
+lst.append(<span class="number">4</span>)
+lst.pop(<span class="number">0</span>)
+lst[<span class="number">0</span>]  <span class="comment"># первый</span>
+lst[-<span class="number">1</span>] <span class="comment"># последний</span>
+<span class="function">len</span>(lst)
 
-<span class="string">f"Привет, {name}!"</span>         <span class="comment"># f-строка</span></code></pre>
-        </div>
+<span class="comment"># Словари</span>
+d = {<span class="string">"ключ"</span>: <span class="string">"значение"</span>}
+d[<span class="string">"новый"</span>] = <span class="string">"data"</span>
+<span class="keyword">if</span> <span class="string">"ключ"</span> <span class="keyword">in</span> d:
+    <span class="function">print</span>(d[<span class="string">"ключ"</span>])
 
-        <h3>🪄 Методы строк</h3>
-        <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots">
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-              <div class="code-dot"></div>
-            </div>
-            <span class="code-lang">Python</span>
-          </div>
-          <pre><code>text = <span class="string">"  ПРИВЕТ  "</span>
+<span class="comment"># random</span>
+<span class="keyword">import</span> random
+random.choice(lst)
+random.randint(<span class="number">1</span>, <span class="number">10</span>)
 
-text.lower()      <span class="comment"># "  привет  "</span>
-text.upper()      <span class="comment"># "  ПРИВЕТ  "</span>
-text.strip()      <span class="comment"># "ПРИВЕТ"</span>
-text.replace(<span class="string">"П"</span>, <span class="string">"п"</span>)  <span class="comment"># "  пРИВЕТ  "</span>
-
-text.lower().strip()  <span class="comment"># "привет" — комбинируем!</span></code></pre>
-        </div>
-
-        <h3>🆘 Частые ошибки</h3>
-
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Ошибка</th>
-                <th>Как исправить</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>IndentationError</code></td>
-                <td>Проверь отступы внутри <code>if</code>/<code>while</code></td>
-              </tr>
-              <tr>
-                <td><code>NameError</code></td>
-                <td>Проверь, создал ли ты переменную раньше</td>
-              </tr>
-              <tr>
-                <td><code>SyntaxError</code></td>
-                <td>Проверь кавычки, скобки, двоеточия</td>
-              </tr>
-              <tr>
-                <td><code>TypeError</code></td>
-                <td>Используй f-строку для объединения текста и чисел</td>
-              </tr>
-              <tr>
-                <td><code>IndexError</code></td>
-                <td>Проверь, что индекс меньше длины списка</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="callout callout-success">
-          <div class="callout-icon">🎉</div>
-          <div class="callout-content">
-            <p><strong>Помни:</strong> Каждый великий программист когда-то написал свой первый <code>print("Hello, World!")</code>. Ты только что сделал этот шаг. Гордись собой!</p>
-          </div>
+<span class="comment"># f-строки</span>
+<span class="function">print</span>(<span class="string">f"Привет, {name}! Тебе {age}."</span>)</code></pre>
         </div>
       </div>
     </section>
@@ -2033,8 +2057,8 @@ text.lower().strip()  <span class="comment"># "привет" — комбини�
     <footer class="footer">
       <div class="container">
         <div class="footer-content">
-          <p class="footer-text">🤖 Создаём говорящего робота на Python • Урок в стиле Фейнмана</p>
-          <p class="footer-copyright">Удачи в программировании! Ты справишься! 💪🐍✨</p>
+          <p class="footer-text">🤖 Создаём чат-бота на Python • Полноценный урок от основ до интеллекта</p>
+          <p class="footer-copyright">© 2026 • Удачи в программировании! 🐍✨</p>
         </div>
       </div>
     </footer>
@@ -2042,21 +2066,70 @@ text.lower().strip()  <span class="comment"># "привет" — комбини�
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Элементы
       const sidebar = document.getElementById('sidebar');
       const sidebarToggle = document.getElementById('sidebarToggle');
+      const sidebarClose = document.getElementById('sidebarClose');
       const sidebarOverlay = document.getElementById('sidebarOverlay');
+      const mainContent = document.getElementById('mainContent');
       const themeToggle = document.getElementById('themeToggle');
       const themeIcon = document.getElementById('themeIcon');
       const themeText = document.getElementById('themeText');
       const navLinks = document.querySelectorAll('.nav-link');
 
-      // Инициализация темы
+      // Состояние сайдбара
+      let sidebarVisible = true;
+
+      function openSidebar() {
+        sidebar.classList.remove('collapsed');
+        mainContent.classList.remove('expanded');
+        sidebarOverlay.classList.add('show');
+        sidebarVisible = true;
+        document.body.style.overflow = window.innerWidth <= 768 ? 'hidden' : '';
+      }
+
+      function closeSidebar() {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('expanded');
+        sidebarOverlay.classList.remove('show');
+        sidebarVisible = false;
+        document.body.style.overflow = '';
+      }
+
+      // Инициализация: сайдбар открыт
+      openSidebar();
+
+      sidebarToggle.addEventListener('click', function() {
+        if (sidebarVisible) {
+          closeSidebar();
+        } else {
+          openSidebar();
+        }
+      });
+
+      sidebarClose.addEventListener('click', closeSidebar);
+      sidebarOverlay.addEventListener('click', closeSidebar);
+
+      // Закрытие при клике на ссылку (мобильные)
+      navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          if (window.innerWidth <= 768) {
+            closeSidebar();
+          }
+        });
+      });
+
+      // Закрытие по Esc
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && sidebarVisible && window.innerWidth <= 768) {
+          closeSidebar();
+        }
+      });
+
+      // Тема
       let currentTheme = localStorage.getItem('theme') || 'dark';
       document.documentElement.setAttribute('data-theme', currentTheme);
       updateThemeUI(currentTheme);
 
-      // Переключатель темы
       function toggleTheme() {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', currentTheme);
@@ -2065,55 +2138,11 @@ text.lower().strip()  <span class="comment"># "привет" — комбини�
       }
 
       function updateThemeUI(theme) {
-        if (theme === 'dark') {
-          themeIcon.textContent = '☀️';
-          themeText.textContent = 'Светлая тема';
-        } else {
-          themeIcon.textContent = '🌙';
-          themeText.textContent = 'Тёмная тема';
-        }
+        themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        themeText.textContent = theme === 'dark' ? 'Светлая тема' : 'Тёмная тема';
       }
 
       themeToggle.addEventListener('click', toggleTheme);
-
-      // Открытие/закрытие sidebar
-      function openSidebar() {
-        sidebar.classList.add('open');
-        sidebarOverlay.classList.add('show');
-        document.body.style.overflow = 'hidden';
-      }
-
-      function closeSidebar() {
-        sidebar.classList.remove('open');
-        sidebarOverlay.classList.remove('show');
-        document.body.style.overflow = '';
-      }
-
-      sidebarToggle.addEventListener('click', function() {
-        if (sidebar.classList.contains('open')) {
-          closeSidebar();
-        } else {
-          openSidebar();
-        }
-      });
-
-      sidebarOverlay.addEventListener('click', closeSidebar);
-
-      // Закрытие при клике на ссылку (мобильные)
-      navLinks.forEach(function(link) {
-        link.addEventListener('click', function() {
-          if (window.innerWidth <= 1024) {
-            closeSidebar();
-          }
-        });
-      });
-
-      // Закрытие по Esc
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && sidebar.classList.contains('open')) {
-          closeSidebar();
-        }
-      });
 
       // Активная ссылка при скролле
       const sections = document.querySelectorAll('.section[id]');
@@ -2121,13 +2150,13 @@ text.lower().strip()  <span class="comment"># "привет" — комбини�
       function updateActiveLink() {
         const scrollPosition = window.scrollY + 100;
         
-        sections.forEach(function(section) {
+        sections.forEach(section => {
           const sectionTop = section.offsetTop;
           const sectionHeight = section.offsetHeight;
           const sectionId = section.getAttribute('id');
           
           if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-            navLinks.forEach(function(link) {
+            navLinks.forEach(link => {
               link.classList.remove('active');
               if (link.getAttribute('href') === '#' + sectionId) {
                 link.classList.add('active');
